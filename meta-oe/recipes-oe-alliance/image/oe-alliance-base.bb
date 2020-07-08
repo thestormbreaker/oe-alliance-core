@@ -38,7 +38,6 @@ RDEPENDS_${PN} = "\
     e2fsprogs-mke2fs \
     e2fsprogs-e2fsck \
     e2fsprogs-tune2fs \
-    minilocale \
     libavahi-client \
     libcrypto-compat-0.9.7 \
     libcrypto-compat-1.0.0 \

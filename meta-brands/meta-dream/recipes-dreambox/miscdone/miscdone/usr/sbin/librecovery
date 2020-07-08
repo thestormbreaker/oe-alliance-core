@@ -1,0 +1,957 @@
+#
+# Copyright (C) 2019 Dream Property GmbH
+#
+
+ROOT_MOUNTPOINT=/mnt
+ROOT_NAME=dreambox-rootfs
+DATA_MOUNTPOINT=/data
+DATA_NAME=dreambox-data
+RECOVERY_CACHE=${DATA_MOUNTPOINT}/.recovery
+LEGACY=false
+
+MOUNTPOINTS=
+WORKSPACE=
+
+set -e
+
+exec 3>/dev/null
+exec 4>&2
+exec 5>&1
+
+librecovery_init()
+{
+	if [ -f /proc/stb/info/mid ]; then
+		read MID </proc/stb/info/mid
+	else
+		warn "Could not read MID!"
+		mark_legacy_version
+	fi
+
+	eval `tpm-ca 2>/dev/null | grep '^CA_[A-Z]\+=[A-Z0-9:_-]\+$'`
+	if [ -z "$CA_MID" ]; then
+		warn "Could not read CA!"
+		mark_legacy_version
+	elif [ "$MID" != "$CA_MID" ]; then
+		warn "Detected incompatible drivers!"
+		MID="$CA_MID"
+	fi
+
+	case "$MID" in
+		19)
+			MACHINE="dm7080"
+			;;
+		20)
+			MACHINE="dm820"
+			;;
+		21)
+			MACHINE="dm520"
+			;;
+		22)
+			MACHINE="dm900"
+			;;
+		23)
+			MACHINE="dm920"
+			;;
+		24)
+			MACHINE="one"
+			;;
+		*)
+			[ -f /proc/stb/info/model ] || abort "Unsupported machine!"
+			read MACHINE </proc/stb/info/model
+			;;
+	esac
+
+	case "$MACHINE" in
+		one)
+			RECOVERY_KEY="
+				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
+			"
+			;;
+		dm520)
+			RECOVERY_KEY="
+				mQENBFcLsf0BCADDo4SxnQwl16cWSYnTwwp+E6ZvdhY3x9yw7b//MUDELtKkEp7wZ+AtHDYd+jzJ
+				Syc+n1m4MkArNUzCdseFJJAYEsNEjZ6ZkoMSQ/GZsIKi2IYT0LXN+9c2ZLLZstNZ2201KwqjFkpE
+				GXSn7VeLAvm82UgMaECY+4vJ5K3XtsLX6onCfidKy4qI8si4CTLylkDegGQ035FlkzqMKA8flafd
+				RGiEWO/2o2ZdYgdjOYQq6W2MaI6zgDzg1V2HMXSweIxnhn8W4iZF80nLTPihoe+p3FRKX0d2G4B0
+				wM49BTgfOgdcu3d3xZBRndOUXq0biga814jYLm3o+DqCmfmt3fsVABEBAAG0NERyZWFtYm94IERN
+				NTIwIFJlY292ZXJ5IDxkbTUyMEByZWNvdmVyeS5kcmVhbWJveC5kZT6JATgEEwECACIFAlcLsf0C
+				GwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJENzmv7ygdoPTTw0IAIN+WQMjAQGbSEo6DP41
+				U8g3u3gRVxBWpAPeE8wsq3wMjmDK4kcCohnWzJSqb7O4XFDUO0fsg0InojpYCIvfhSK+7eohwIaJ
+				ilkdM37nUY7TioFY3pOx63ZzDAJ5SsirU26CIxB+hHWueaS/XsGinodzxl6H9/l8I33U/2DN1oUe
+				y9JcHVNxdBRtSNZMYyZXlA+4LrkDDN6/c6kpIG2uZEYOH0WlP+Mqu9G81yYYKiK9MTlsYHcCoSlV
+				XR8VVsVBxKkfSsoWLMkhE7aEFqq+FeVjcrRyc7R+QGhdzwq9gK50iXpr+YxfHJNn2FML185NGwyp
+				Gnvzh5YpHKnihOS+J7c=
+			"
+			;;
+		dm820)
+			RECOVERY_KEY="
+				mQENBFQ5xy0BCADyK6WY3xcKICfVFSbQQ+GXYK9k54bXJ4d2jNaSfk4yAU/YNo2d2ZNTvsN2fQTV
+				2hwQb1yamJ9MDfqS46qio2rxTBpCNjWwn08ANrn5O52VVy/72xceuUl1XW+Hf0ANF2jtgLTzNpIT
+				7uQBXxww7/3WSeoK6EP2xb7cbn5PHxtfv/b71wdq3nUYZWOzHOA4mfaRMZ61n37BkADiA8QJKKNN
+				6xm4gDMTrAZF1QRC5xtVZ0xHgPRxjD2So3+s5Jf+BL+W5OfOeI8/S3VdHDmvLi30D6D3jAGQKYtu
+				gnf6UaBBczoN5otwmeIOdHpxK4hSk8AY0C+umJdaDt6szELgGTq/ABEBAAG0LERyZWFtYm94IERN
+				ODIwIFJlY292ZXJ5IDxyZWNvdmVyeUBkbTgyMC5jb20+iQE4BBMBAgAiBQJUOcctAhsDBgsJCAcD
+				AgYVCAIJCgsEFgIDAQIeAQIXgAAKCRAmJQHXeeLAz2QdCACCxIcajDZ/Zl9V+jAubsCqPlh8Ep+v
+				ECizcjF7YiG9br3HGZCD8SdKQGAYQmMLLlo10Jj91/v6OhqDtpTSU2LyebjJZ0JE5xiWjmA+4bPs
+				tgOe+TmaNlQdT47V9whXx2+hKBYMpKtfv9TYhDoxBrQvaCguyVYDcqGyzslzjZonDeVIQQtLQjpR
+				Bi/eLrrmV+0CiPZowfceX9SJEknomc/TrYDRgoZRoIhZh6WG/68h+kzHN9MYDLwxM9vgxifQ5/xe
+				anMfDItZGZ+rtPKLq/yW6glOw//ctmngLwLO/wuyG7/yeJ98sj7bmO2SP52MvKmj6F8dag+m2V8/
+				4n4KYl7KsAIAAw==
+			"
+			;;
+		dm900)
+			RECOVERY_KEY="
+				mQENBFfS0TQBCADLP/mDLWiIF/dJmVFVzQf9CJ7jtb5ilVf4SOasXkPEbdtDsvIIE8ShAHPUgmYC
+				YGAl5FJNxaPZMhyylC9BZOLeYdUgJVRJXjY2WX/bE/6/J5z9UWj+XPzbnbxC+ZnzOGwyUAiHtwbF
+				YLH0SnCN6LEl+nqgwRwpKBgFp64YyAAJ/Rpj5tK6T9v5QuN5CK/UcClmLSqlC/KSbjf93+W9AyOM
+				9F/apxNnhWyEPPjEQbJV8G1WTDL12j4NER3CwwGr+WlKidNdtqDZYYMx89p/qLoV0kbk8tOB7Szx
+				STFQIpetPi++WlKduS5K1gmVYSU8v9WdSAIDujbH1lqOtBq6AaIFABEBAAG0NERyZWFtYm94IERN
+				OTAwIFJlY292ZXJ5IDxkbTkwMEByZWNvdmVyeS5kcmVhbWJveC5kZT6JATgEEwECACIFAlfS0TQC
+				GwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEPAqD3Z9onVhi9YIALa4eA9XRbyNT/kz2fj9
+				gJ9aLfoxPACbkc2pxwVmLtqeCvsgzEvG62QkFwfL+HDQy2G3YgOSYM8/Z1Y8Agp0iS/QNzNE9v7u
+				cniOy7bX+L+M/zZtLnmY4ixIWcPdMraipjaH3v1c9SUg4eeN6WRgQnPmDA2w+PBViXoAAuqKQrG/
+				7DrGLzXiUzRgxoub4hm1au6KSnEgthn7O33dtCKRDwlCFDHNqdOpgayfGKZ+ENrP5FPZIuSmJH+Z
+				GWxsi2P4cmVwsSE0i1REX3pk1xd4lefdmminxhgsrHnlh4q5O6fSrSlIfNKZ3SZZ3KeSCB21g/9L
+				5jAezlvBvp2M0qC2EDQ=
+			"
+			FSBL_KEY="
+				mQENBFhPLT4BCACu7IxjzWdrzWYh0lbFx9AvMmniszx67gAvvz0AMlug25TsVo+2u+YMacK5QX6b
+				8GLkuUYCETZzadaSoOd3WqUadjmtgqa1+G4BZPEHSuyrmMGuathRWCHXJ0dXC7d41ckZS0ufpHM7
+				/a9MBh4sJUdrVrGCvxfRYms/R3CrWJgEcZGgHfeS85XFTAQygALnLtk4j/12am9npLDOFAfxy5D1
+				GOi832omdu+QeCLpBqjCXbYm3C6+Vwpkm/780o0tGAuogKhflsc0C9ax50oEtj/G7xLCoIjcKpxr
+				mX3fh6kxD54mIj0nMSvSJiDkLICDBsKRuOJ+HCrqo0yK5r6LsH2TABEBAAG0NURyZWFtYm94IERN
+				OTAwIChGU0JMIHVwZGF0ZSkgPGRtOTAwQGZzYmwuZHJlYW1ib3guZGU+iQE4BBMBAgAiBQJYTy0+
+				AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRBo07UpmBtXLJrCB/4u4tsMBivjsKlrGdvu
+				/QiOO2+CO2XXItfFctyOgUsqIUonYAJK6BUv2rb0wMqSjwGcqjQjqdtefe4aILqZKqjlyneIkyrx
+				J7e/W24g43xo6tVGQuX8RXXEGeN2NaqVL3HUi+BAvPwAqZujQn0RA8VLE8U5KrdAhKm5VxcnHurh
+				AaqnV6GBTmjIqJSLMzIcUAqi4Y1Pv2FfHMYJZetArH0CQFH2BZthhheWj/BvKOSBJUFMcWGpwZeo
+				sPMw9rDJPziwiMhLqFlLip3bk4PU1NSSluTvPyxoVh43P4flCSuvZKZgz/aJ+6IB8O1SYLPRu+51
+				kII48WItRJMlH2Fpur47uQENBFhPLT4BCACyzVlv6Ne3JodR+yihnizl622H8xstIqXVVXnmUwBR
+				rbQg4/NpqtDNEIh1GdhLgE3F+dFMRBlNFsGcHbEhmB9Gn0LNHFjDkKB4/LFqVh2k4aemRF6xafkd
+				kZNwMU390OG21AgxGYoOP/YDqHKEdQ0+H+1qjyIuCu66UwX1U22Y6si9iXhBVXEkv+Ga4b1LMCoX
+				M/664oeU2hey7UcWkiFibJ8E2jLGIu4+8wNBDvt9I+2p6gSlu6xwvUSmpBhU+wo2/+uav7WAb6Ub
+				bpRZ6URvb2F0o2xSJ7FlRYyGGCcOXcLYRQzUt2ataS7th1/NNKmtSUFwCemrQJU9Lpt+NtHPABEB
+				AAGJAR8EGAECAAkFAlhPLT4CGwwACgkQaNO1KZgbVyy4pgf/TVckA31sAHQXwkzvF5rmRo/KqBBL
+				pRtCaY+48l/Ac5aXT1evsjRZKBCkU4QOkJsytP0E3Rj/o8kAcT34uS+7J4xZGdyM+hcR6huA4CDK
+				z6gz3op9mGHF0PIbY7cm6tu+k32iuy+Tp5a3oPywUSkoMw8FT6GwmSf3VADOMR3TdiTP9XRvhgGW
+				qCtHm0s91wOwsYifEDyNLg39QW801YXKup7Gj7E0u8p1c9Ey+Gifio/YrAB4YaJuP0uaM2Mt6OJp
+				kl9JWN12d5M7linrcbpm2/WpzKzSfw5LEtzZSeEO0CaYRwhoYKxUsaMZwMFGtuUDw34RbHDqfpok
+				s3F9cSJ97g==
+			"
+			;;
+		dm920)
+			RECOVERY_KEY="
+				mQENBFmygj0BCADUI6wYunFIwnFoLVY1k3h+NiaW3GumWcts3Rx8OX1J9v/zsSi55xeLZOKEz1Jt
+				pFGY8EOShk4VmcGOtrxwjHfURyEfUZGWR8SqGD0OoxgJdYJImGVp32MdhkZTETzJodIs7n7/9mPz
+				ah/QWlYiFL0ExEPVMPRhopmJEFQ4IQTDKPhyERbZjta2Xtp89sErKXKkbtG3Qb9tRGN5l5XKXbCG
+				3qaIl0+X5h8mg5neS5d0a9IwLeD2LUElOKsnbnoQWUVmNlDCQSQwnYGj38CA/IxzKQItKJtYr5a3
+				zDqbkEDpdAja0BW8kApngToNIJaf/Vi5Vk3YJN29lLa4ISJEYjzNABEBAAG0NERyZWFtYm94IERN
+				OTIwIFJlY292ZXJ5IDxkbTkyMEByZWNvdmVyeS5kcmVhbWJveC5kZT6JATcEEwEIACEFAlmygj0C
+				GwMFCwkIBwIGFQgJCgsCBBYCAwECHgECF4AACgkQQEJVMbPFsaPONAf/RAGd45cXIfJBKtXsILzt
+				HFql0wGZo5XhnAegYEOVShmKFhdHQJeOdW628TAIKJXeX0Po8pVtIDIpFf42ebmp3MdJMjk2XvZX
+				MFwoXcw2RerRZ+MMbuAe+vm1vjXfpgBG6guT8c9bT6Z1D7npaSK2eW4AkeVgpQtaYWxVkvaelNuH
+				oW3Xc6pcbhil4YITQA7qNHZMmieTWutG0+CPhw1DlexFSyCjixr0kD500O64cHOIKOXs1Xj6h/IC
+				qCPkncI1ZQizyGBUKqWc1RSm/f7VA2+Pa3cUVDO99+LGBjt1yfxPP+9Un9kte7Tlt5BJzUIxwEkn
+				yJqNWy6snJD7buu2w7kBDQRZsoI9AQgAsnbCKWrXrlwvmw/zpXS8FnxDiNrc669X0xQzBRdQs6b6
+				Nj32FnoEoechsuOlwyCZtHXoIZSAtkdJ4yMJlouMXSnD1xhxiEBQ6v3qlEdL3ASxlEWzzTtgKePZ
+				/GS+KyfAAsDzNlTe2uZEsVa/6yH82A919kD6FeuDVqT0WtfyzidJkkERKhdG+AZe8fA6SIbkuoo3
+				/lw8QFvfIlbOg4XYlox8WyMetjqFbT+n8wlf0auijuLUsueMeknX+dDsoKeK5DGso1A85EyBfeML
+				szNOMUtzhpGG8WQL9kjYBoymKJaSh7nhuwop8hupJD6tHyBuvi/deNF+YvYE40WmleJtVwARAQAB
+				iQEfBBgBCAAJBQJZsoI9AhsMAAoJEEBCVTGzxbGj40YIALJfWEQ0UrkNoKWtjE7LXhmxlgaESb22
+				FgymbixwQN/qxiP0JAxO6XZJOArT1+L79RKHDgGKb8hJjD6iYPwr479CWFjsDKsofB3ceK8lCU2L
+				FFMlB8i0K2d0EB33R1Xcrkc8FcqUZhjoEX8x1jnGDBbD0g5S4qilHCOKrANmaqd+KnBAE1M24Yts
+				S9/eP6lf65pWyFmN4du0jCGxSHGocTJ3B60xcRSVlsqdcqE+rqR2xya5ugbW9r5/nU37wWaTj0lz
+				mkS+EykH2gxlNxcCIRkhQkuCptJa9ooqSRX0lVxuvLxJHQ6E/lpgK4Tm1Cs1SdGk4tYfG03c3xpA
+				MfI1m4s=
+			"
+			;;
+		dm7080)
+			RECOVERY_KEY="
+				mQENBFPo2oUBCAC6dzqe5azBCkxzj99xNfzwB4L6tHzz83zqD2KUQuuJMhO7Q2g9AHnSNQ0z1+Bz
+				oX2gGX90FusBSLiCuZmNdnxlcl7KVfBe37EpYtQNGCZKlWeruCAUdJGKIyPJXDvkXCy3dj6z1ho8
+				p1r3uazEbUbJyLvwjzcg0Ua1qxFjLoq/h15yDgd0NCkMStL6gwKdmReLRfE/tn0K53CVQzIeEFyn
+				EW3N0tu2deiYkanHy/MM9IOIv3oQmoEWNaVsDf+gG7nUPj0QE66GOYlBugR5vNi3BorOctarQp/8
+				Dh56muiqomwwewJubzsvjUjpiYXdO/3RN2gOej2+5hUCiYmvOahfABEBAAG0LkRyZWFtYm94IERN
+				NzA4MCBSZWNvdmVyeSA8cmVjb3ZlcnlAZG03MDgwLmNvbT6JATgEEwECACIFAlPo2oUCGwMGCwkI
+				BwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEBWob67Wz1bnUGYH/0zmTS7Gtvv97oHHnz3JSkLybDRj
+				Jx/wH+vpzyCRl8rC7TlHs5GBfjoJ1Hjo4DsZqElTb8g+kg5WGzMBUUuwabRhZuf2CL7/IPKP+LWH
+				t2ByZX3OgS1Q+HDLob5wlKllD9y/wwekuwS/8cgdnDH9URHCBqIt5gWQzLU1pvmQrKPXM1aMsLQj
+				16vbktXNkREF/cNhWfQFQs2dOwmzNEDeuE32I6h7PYl1bFP0hCOmbkcTuibnC+tsWOJMKF1iZ8bq
+				xDND9BYTwGtD2SVrddu3i4kBz6hka01ZnfSUZewpu+TrCgaD6oENfarPiC9VYfKEFi10RIPIxwRX
+				s1tBOOQNKpywAgAD
+			"
+			;;
+		*)
+			abort "Unsupported machine!"
+			;;
+	esac
+
+	case "$MACHINE" in
+		one)
+			FILESYSTEM="ext4"
+			;;
+		dm520)
+			FLASH_DEVICE="/dev/mtd0"
+			UBI_ID="0"
+			UBI_DEVICE="/dev/ubi${UBI_ID}"
+			UBI_VOL_ID="0"
+			FILESYSTEM="ubifs"
+			;;
+		dm820|dm900|dm920|dm7080)
+			FLASH_DEVICE="/dev/mmcblk0"
+			FILESYSTEM="ext4"
+			;;
+	esac
+
+	case "$MACHINE" in
+		one)
+			KERNEL_PARTITION="/dev/boot"
+			RESCUE_PARTITION="/dev/recovery"
+			ROOT_PARTITION="/dev/${ROOT_NAME}"
+			DATA_PARTITION="/dev/${DATA_NAME}"
+			KERNEL_SIZE=$((32 * 1024 * 1024))
+			RESCUE_SIZE=$((32 * 1024 * 1024))
+			;;
+		dm520)
+			KERNEL_PARTITION="/dev/mtd2"
+			ROOT_PARTITION="${UBI_DEVICE}_${UBI_VOL_ID}"
+			DATA_PARTITION="/dev/disk/by-label/${DATA_NAME}"
+			KERNEL_SIZE=$((5 * 1024 * 1024))
+			SSBL_SIZE=$((1024 * 1024))
+			;;
+		dm820|dm7080)
+			ROOT_PARTITION="/dev/mmcblk0p1"
+			DATA_PARTITION="/dev/mmcblk0p2"
+			KERNEL_SIZE=$((32 * 1024 * 1024))
+			SSBL_SIZE=$((4 * 1024 * 1024))
+			SGDISK_ARGS="-n 1:147456:4194303 -c 1:rootfs -t 1:8307
+			             -n 2:4194304: -c 2:data -t 2:8300"
+			PARTED_ARGS="mkpart primary ext2 72MiB 2048MiB
+			             mkpart primary ext2 2048MiB 100%"
+			;;
+		dm900|dm920)
+			KERNEL_PARTITION="/dev/mmcblk0p1"
+			ROOT_PARTITION="/dev/mmcblk0p2"
+			DATA_PARTITION="/dev/mmcblk0p3"
+			KERNEL_SIZE=$((31 * 1024 * 1024))
+			SGDISK_ARGS="-n 1:2048:65535 -c 1:kernel -t 1:8301
+			             -n 2:65536:4194303 -c 2:rootfs -t 2:8307
+			             -n 3:4194304: -c 3:data -t 3:8300"
+			PARTED_ARGS="mkpart primary ext2 1MiB 32MiB
+			             mkpart primary ext2 32MiB 2048MiB
+			             mkpart primary ext2 2048MiB 100%"
+			;;
+	esac
+
+	case "$MACHINE" in
+		one)
+			POSTINSTS="dreambox-bootlogo-u-boot kernel-image"
+			;;
+		dm520|dm820|dm7080)
+			FSBL_SIZE=$((1024 * 1024))
+			POSTINSTS="dreambox-secondstage kernel-image"
+			;;
+		dm900|dm920)
+			FSBL_SIZE=$((3 * 512 * 1024))
+			POSTINSTS="kernel-image"
+			;;
+	esac
+}
+
+is_beneath_directory()
+{
+	local file=`xrealpath ${1}`
+	local dir=`xrealpath ${2}`
+
+	case "$file" in
+		$dir/*)
+			true
+			;;
+		*)
+			false
+			;;
+	esac
+}
+
+is_blockdev()
+{
+	[ -b "${1}" ]
+}
+
+is_chardev()
+{
+	[ -c "${1}" ]
+}
+
+is_directory()
+{
+	[ -d "${1}" ]
+}
+
+is_file()
+{
+	[ -f "${1}" ]
+}
+
+is_readable()
+{
+	[ -r "${1}" ]
+}
+
+is_readable_blockdev()
+{
+	is_blockdev "${1}" && is_readable "${1}"
+}
+
+is_readable_file()
+{
+	is_file "${1}" && is_readable "${1}"
+}
+
+is_writable()
+{
+	[ -w "${1}" ]
+}
+
+is_writable_blockdev()
+{
+	is_blockdev "${1}" && is_writable "${1}"
+}
+
+is_writable_chardev()
+{
+	is_chardev "${1}" && is_writable "${1}"
+}
+
+is_writable_directory()
+{
+	is_directory "${1}" && is_writable "${1}"
+}
+
+is_empty()
+{
+	[ -z "${1}" ]
+}
+
+is_file_size_le()
+{
+	[ "`stat -c '%s' ${1}`" -le "${2}" ]
+}
+
+is_initrd()
+{
+	is_file "/etc/initrd-release"
+}
+
+is_nfsroot()
+{
+	is_readable_file /proc/cmdline && grep -q -w root=/dev/nfs /proc/cmdline
+}
+
+is_mountpoint()
+{
+	is_directory "${1}" && mountpoint -q `realpath "${1}"`
+}
+
+is_empty_or_mountpoint()
+{
+	is_empty "${1}" || is_mountpoint "${1}"
+}
+
+is_mounted()
+{
+	if is_blockdev "${1}"; then
+		is_mountpoint "${2}" && [ `mountpoint -x "${1}"` = `mountpoint -d "${2}"` ]
+	else
+		is_mountpoint "${2}" && grep -q "^${1}\s${2}\s" /proc/mounts
+	fi
+}
+
+cleanup()
+{
+	IFS=:
+	for dir in ${MOUNTPOINTS}; do
+		unmount "${dir}"
+	done
+	unset IFS
+
+	is_empty "${WORKSPACE}" || rm -rf "${WORKSPACE}"
+}
+
+abort()
+{
+	echo "Fatal: $@"
+	exit 1
+}
+
+warn()
+{
+	echo "Warning: $@" >&5
+}
+
+info()
+{
+	echo "[*] $@" >&5
+}
+
+create_directory()
+{
+	if ! is_directory "${1}"; then
+		info "Creating directory '${1}'"
+		mkdir -p "${1}" >&3 2>&4
+	fi
+}
+
+create_filesystem()
+{
+	info "Creating ${FILESYSTEM} filesystem '${1}' on ${2}"
+	xtrap mkfs.${FILESYSTEM} -F -L "${1}" "${2}"
+}
+
+blkdev_has_filesystem()
+{
+	is_blockdev "${1}" && (
+		if hash blkid 2>/dev/null; then
+			blkid -o export "${1}" | grep -q "^TYPE=${FILESYSTEM}$"
+		else
+			mark_legacy_version
+			local dir=`mktemp -d -p ${WORKSPACE}` || abort 'Failed to create temporary mount point'
+			grep -q "^${1}\s[^\s]\+\s${FILESYSTEM}\s" /proc/mounts || (mount -t ${FILESYSTEM} -o ro "${1}" "${dir}" 2>/dev/null && umount "${dir}")
+		fi
+	)
+}
+
+create_nand_filesystem()
+{
+	info "Creating ${FILESYSTEM} filesystem on ${1}"
+	xtrap mkfs.${FILESYSTEM} "${1}"
+}
+
+erase()
+{
+	info "Erasing flash memory on ${1}"
+	xtrap flash_erase "${1}" 0 0
+}
+
+write_nand()
+{
+	info "Writing to NAND memory on ${1}"
+	xtrap nandwrite -p -m "${1}" "${2}"
+}
+
+format_ubi_device()
+{
+	info "Formatting ${1} for UBI"
+	xtrap ubiformat -y "${1}"
+}
+
+attach_ubi_device()
+{
+	info "Attaching ${1} to UBI"
+	xtrap ubiattach -d "${UBI_ID}" -p "${1}"
+}
+
+remove_ubi_volume()
+{
+	info "Removing volume ${UBI_VOL_ID} from ${UBI_DEVICE}"
+	xtrap ubirmvol "${UBI_DEVICE}" -n "${UBI_VOL_ID}"
+}
+
+create_ubi_volume()
+{
+	info "Creating volume ${UBI_VOL_ID} on ${UBI_DEVICE} (${ROOT_NAME})"
+	xtrap ubimkvol "${UBI_DEVICE}" -n "${UBI_VOL_ID}" -N "${ROOT_NAME}" -m
+}
+
+create_partition_table()
+{
+	info "Creating partition table"
+	[ -n "${SGDISK_ARGS}" ] || abort "Can't create partition without SGDISK_ARGS."
+	if hash sgdisk 2>/dev/null; then
+		xtrap sgdisk -Z "${1}" || true
+		xtrap sgdisk ${SGDISK_ARGS} "${1}"
+	else
+		mark_legacy_version
+		xtrap parted --script --align=optimal "${1}" -- mklabel gpt ${PARTED_ARGS}
+	fi
+}
+
+create_tarball()
+{
+	local sysroot="${1}"
+	local tarball="${2}"
+	local opt
+
+	case "${tarball}" in
+		*.tar)
+			opt=""
+			;;
+		*.gz|*.tgz|*.taz)
+			opt="-z"
+			;;
+		*.Z|*.taZ)
+			opt="-Z"
+			;;
+		*.bz2|*.tbz|*.tbz2|*.tz2)
+			opt="-j"
+			;;
+		*.lz)
+			opt="--lzip"
+			;;
+		*.lzma|*.tlz)
+			opt="--lzma"
+			;;
+		*.lzo)
+			opt="--lzop"
+			;;
+		*.xz|*.txz)
+			opt="-J"
+			;;
+		*)
+			abort "Invalid file type: ${tarball}"
+			;;
+	esac
+
+	create_directory "`dirname ${tarball}`"
+
+	echo "${WORKSPACE:1}" >exclude.list
+	(cd "${sysroot}" && find . -type s) >>exclude.list
+
+	if [ $# -gt 2 ]; then
+		printf "" >include.list
+		IFS=$'\n'
+		set -- ${3}
+		unset IFS
+		for path; do
+			if [ -e "${sysroot}${path}" ]; then
+				echo "${path:1}" >>include.list
+			fi
+		done
+	else
+		echo "." >include.list
+	fi
+
+	info "Creating ${tarball} from ${sysroot}"
+	xtar -C "${sysroot}" ${opt} --exclude-from=exclude.list --files-from=include.list -cf "${tarball}.tmp"
+	mv "${tarball}.tmp" "${tarball}"
+}
+
+create_workspace()
+{
+	umask 077
+
+	WORKSPACE=`mktemp -d` || abort 'Failed to create working directory'
+	trap cleanup EXIT INT
+	cd "${WORKSPACE}" || abort 'Failed to change working directory'
+}
+
+extract_tarball()
+{
+	local tarball="${1}"
+	local dir="${2}"
+	shift 2
+
+	info "Extracting '${tarball}' to '${dir}'"
+	xtar -xf "${tarball}" -C "${dir}" $@
+}
+
+fetch()
+{
+	info "Downloading '${1}/${2}'"
+	if hash curl 2>/dev/null; then
+		curl -q "${1}/${2}" -o "${2}" >&3 2>&4
+	else
+		wget -q "${1}/${2}" -O "${2}" >&3 2>&4
+	fi
+}
+
+create_keyring()
+{
+	export GNUPGHOME="${WORKSPACE}"
+	echo "${1}" | sed -e 's,\s\+,,g' -e '/^$/d' | base64 -d > trustedkeys.gpg || abort 'Failed to write public key'
+}
+
+create_keyring_for_uri()
+{
+	KEY_DORA="
+		mQENBFQa0QwBCACe+mzu7j7Gc4Ew4XUK1b84lgv2ABXCeZqBBQtgat5f9zbPCClEoNBz6csWND0z
+		x/km+YxPSfF7eYeSPjY6GifiduhkxQP/7oqyhzlW54ZwoCRgVGyzhir5oCszXQm3TvDYoqakrBNS
+		bJ4rNoaDqdA5RdEtvBEIHH33iJakD+7pUYEkPcXZiwV7R2hA3kfiwSjIVsmc5qI0u7KxBgkerBg7
+		DkImwzxd2jim1hUvZYSjz/u5dL/AwL/gPSEI/8UqnU7wuuT01UlJ1bFOQtnYi24aoC0Yr7bHQOwm
+		CIvHSyaKLzU5UWj0nVmN6bmcpUKzonYtD4y4UtqNlleK4K/9F9EhABEBAAG0R29wZW5kcmVhbWJv
+		eCByZXBvc2l0b3J5IHNpZ25pbmcga2V5ICgyLjIpIDxyZXBvc2l0b3J5QG9wZW5kcmVhbWJveC5v
+		cmc+iQE3BBMBCgAhBQJUGtEMAhsDBQsJCAcDBRUKCQgLBRYDAgEAAh4BAheAAAoJEI4TTvLqUk9F
+		8doH/1nhb/sXXTdTqBe0Az/aLUJdSO9akuJHTisSXoF1CZnADgIOYhJRVzBGDLEBqqrTYDAJolQ2
+		Rec4+68fuEAIZ2ai2zWEIO9liGTQJMzNnaJpAaWmzy/8ur1aAOY5UY2fP6pJmjeoMHxr2swo5VJ8
+		DzRv6QASnaiai3trRRTwzmA60AM8eXYRNqXE2OCroC7Q//YHvi0nxvFC1trfffajvfz9kr949Sfx
+		HYJYsrIMu/JaYrAUkKkR/ZG3UgXth8tQpAUMBcus4kBjsLvF6eMtninkkqfhcW0wpabhI6ZZo/bQ
+		iUTgCbzU8P8qgOLed2yVo8VoMjDTRfKFexbhGh3+CzSwAgADuQENBFQa0QwBCAC654L/wqPPd/+F
+		3zND16SJhlvCXfHbkhzo3QsPfRudmcrSYuH32p2/qlaKzRn4ifTkWPokG67yZbQRkcb6lXqOEGmL
+		K5YM+IAox+7nkGlt1FcmDx6NPL7kEW5XvVzctILOYrljjqNmC6A+qdjZRGeeDUHILou7gH+QSp+1
+		UBjPnF2YF98GTFlKKw6CMuTaqDaica4iNu7aSO4TfM6tlZBM6bS/39dSWVeDgGls5xLySD12EB5d
+		QLRZl1HqZhKroJh7KFiK5gaEj5fnxpeZ0waKQzT1lq+U0n0pR1xu92Axpx7wyp07ka0nzQ9YESZI
+		LO8xOP7W7PtutFX5fOoX391/ABEBAAGJAR8EGAEKAAkFAlQa0QwCGwwACgkQjhNO8upST0WqFgf/
+		aaovcygJPQhcvCpHuM8KHLJFrkeKan5/M/QrELTlHc3cPmk+MyaweHGETaom3H9RSxPrXYXnma9H
+		g6a110mq4x2vzXsZXpemakctale+QTlhc28uumExR+MfBoghEkwpnWBpFCH41aDpNWasVhm686Pt
+		YXiVcacwZ6gX59CHmpkFZsBv8glONlowJ1ml1UKSR1ZYUTPnxi6VnEfbxlrfZgM4l2uG2CrexnKv
+		ZSFMBsY0WstRD8LIp2opYqvnNjox2o/Ko60n4shlYcys0vxZLrr19tsLlv5vtgAowMRWrs/HHlpx
+		i9iBdbf9gVNyLI5TG9vH9DwJ4IbhLE+XFAr5x7ACAAM=
+	"
+	KEY_KROGOTH="
+		mQENBFf2sl4BCADLOA4VixBkeZahH8JDHH5MzJllK0OSmWBsK0LPBD3DPc+nci5lceDzY1HuHpG6
+		iqpkCU8Dsr9TYfpLjLBMUoAOXDxcdU/GVQ1U3Of/1fhG+ZNb2GhiP4vR9omPeujkKmmcgaViR9ia
+		px/DIcMCnx95WgZ4KBTH9OGgrYI0jHaBi4RcJPzDyNB/B8p/tMEx2PRXjecubr3FPY+bJDR3bPLS
+		sjgU6Gj6VHRz90couUJQ70ZayXUSAEB0Xu6NhszjOKWZO52PD+nLe5KUkVYCi2h9/XX/h1m4Cfg9
+		NEMy6UpCl86cA6LGuFQ+cTkfaGLkCUYHlWDBeo7AVsYnj+lQuWnfABEBAAG0R29wZW5kcmVhbWJv
+		eCByZXBvc2l0b3J5IHNpZ25pbmcga2V5ICgyLjUpIDxyZXBvc2l0b3J5QG9wZW5kcmVhbWJveC5v
+		cmc+iQE4BBMBAgAiBQJX9rJeAhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRB7dL9J+iIE
+		59cEB/oDMdR5DqNMh6ZLdWWLMmtILw8SQ8S1nDsBVqm9uJYY6bM3WglPeAPR5GW21C/sCKVXHBI9
+		yIzvd3C8XnCP11rNHVOgN5fo7JMMPrZNvZr9mFP6mXBPvTjm5zlGZVPp33ajDANvjyRNwWeZOGI0
+		IEYmeKTt02lnncGwLyBfic06sp9Yz4e8qW2KVErEg9pWsakhxJzQrJRvMF9w9AzeIelQqcJEwd+v
+		PTFxW77/r+vQbinW8fKxPHMuVFkJiF9evfHyUDcLepe9Zgetve/Z73KIBjjk8PX5UAJqAKT0rNCc
+		kDLoJ9bq6USze9RQNmqEfA/Sr9P8ezkrzvsXftP3EnjPuQENBFf2sl4BCADMAna974PotpvcYMgR
+		1ch/71SljKqTZbsSVeamkdwSwmpxmeEfH5iIA3phaAAJ5OjVc7sSMX8EJU8nszIo7eIaO4aoQdgN
+		g86H7JVMBc4gGxQAfUPcp6oiKcyufZdz52xT8qyFmzpwiwVNg60I5eTRRHOdv14+SniipOG0jqNA
+		elHQm9BJwPh4ohRAgK8QOoPTitq/llSOnxZyX09LjMmtyUPtiCbH4OtKYAYcj5GsDVpb14+Tz4NC
+		B9tx/mEzfUGr5SpmKaorqSDMXxJZ6jtoFXUXTw2qjsLWESwHyVD6s4ugfDfsMQzMEIuSDzeGF6u0
+		E6ADndlf1W9Y+apyDUfFABEBAAGJAR8EGAECAAkFAlf2sl4CGwwACgkQe3S/SfoiBOdJ1wf+JXWL
+		w2E3rkObvzXdsfiO1VvS6YpTY5v6M4AtG+t5R9/gkMooYiCTWGrKTsIPttwKvaEE3CpX0tcFCPc/
+		n7hEiJD6xIhoXx1OJH52Svc4oOhHTmBCpuMtAvtBsBMm4OJg8tLDb7I/OXdpJT+YUNhxfs2+/u/3
+		75H8Mf2pUDfu58gHpaH6cHcRypRKJTWYuagBZ+jEKl1zpAkqQMPQxGET/wWhisZwwS680qBkL+iO
+		85jokbt9hbFYvvi6qM0WqkqN9wiIKAXlJn4Yri6sXlwGltTdfE72h7cWJfdi7wTLu1W1mVVBtsds
+		7fDteCBdzElW9pWpNlRWRu85cIBMBExCrQ==
+	"
+	KEY_PYRO="
+		mDMEXIpGFhYJKwYBBAHaRw8BAQdAqbBzp8+TZw3OJrKoexOyF/adeh5a5/AfJMRWBMZMAuq0R29w
+		ZW5kcmVhbWJveCByZXBvc2l0b3J5IHNpZ25pbmcga2V5ICgyLjYpIDxyZXBvc2l0b3J5QG9wZW5k
+		cmVhbWJveC5vcmc+iJAEExYIADgWIQTD0RAjJObu5yFZZzSpfPBj3HnAJwUCXIpGFgIbAwULCQgH
+		AgYVCAkKCwIEFgIDAQIeAQIXgAAKCRCpfPBj3HnAJ2ikAQDylvCPeCvNSFAtvQMzZFtArVZ8PgMt
+		hoeSWvXqurvF6AEA/lbzsSZk4XeSe8goEyPiom0ynCFvlJVYwUBaRgsoHgu4OARcikYWEgorBgEE
+		AZdVAQUBAQdAHuc8U4tr03xdlIYFXKQ4eWlqdCDDmacrmCUN4MJJOTYDAQgHiHgEGBYIACAWIQTD
+		0RAjJObu5yFZZzSpfPBj3HnAJwUCXIpGFgIbDAAKCRCpfPBj3HnAJ6TQAP4oM+ylt+f28hXm3n37
+		Qf7mPoS1fcaBmmIHHablqSFLKgEA2Lz86nq27kC3G17IdPQbh1QwS7aEcWxd2dxmlp+GWwg=
+	"
+
+	case "$1" in
+		*dreamboxupdate.com/opendreambox/2.2/*/${MACHINE}/*)
+			create_keyring "${KEY_DORA}"
+			;;
+		*dreamboxupdate.com/opendreambox/2.5/*/${MACHINE}/*)
+			create_keyring "${KEY_KROGOTH}"
+			;;
+		*dreamboxupdate.com/opendreambox/2.6/*/*/*)
+			create_keyring "${KEY_PYRO}"
+			;;
+		*)
+			create_keyring "${RECOVERY_KEY}"
+			;;
+	esac
+}
+
+verify()
+{
+	info "Verifying signature of '${1}'"
+	gpgv -q --ignore-time-conflict "${1}.sig" "${1}" >&3 2>&4
+}
+
+files_equal()
+{
+	cmp -s "${1}" "${2}"
+}
+
+fetch_signed()
+{
+	fetch "${1}" "${2}.sig" || true
+
+	if is_file "${RECOVERY_CACHE}/${2}" && is_file "${RECOVERY_CACHE}/${2}.sig"; then
+		if ! is_file "${2}.sig" || files_equal "${2}.sig" "${RECOVERY_CACHE}/${2}.sig"; then
+			info "Copying '${2}' from local storage"
+			xcp "${RECOVERY_CACHE}/${2}.sig" "${2}.sig"
+			xcp "${RECOVERY_CACHE}/${2}" "${2}"
+		fi
+	fi
+
+	is_file "${2}.sig" || abort "Failed to obtain signature '${2}.sig'"
+	is_file "${2}" && verify "${2}" || {
+		fetch "${1}" "${2}" || abort "Failed to download '${2}'"
+		verify "${2}" || abort 'Failed to verify signature'
+	}
+}
+
+safe_mount()
+{
+	local device="${1}"
+	local dir="${2}"
+	shift 2
+
+	if is_mounted "${device}" "${dir}"; then
+		info "Remounting '${device}' to '${dir}'"
+		mount -o remount $@ "${device}" "${dir}"
+	else
+		create_directory "${dir}"
+		info "Mounting '${device}' to '${dir}'"
+		mount $@ "${device}" "${dir}" && MOUNTPOINTS="${dir}:${MOUNTPOINTS}"
+	fi
+}
+
+unmount()
+{
+	if is_mountpoint "${1}"; then
+		info "Unmounting '${1}'"
+		umount "${1}" || mount -o remount,ro "${1}"
+	fi
+}
+
+mount_cache()
+{
+	if is_blockdev "${DATA_PARTITION}"; then
+		safe_mount "${DATA_PARTITION}" "${DATA_MOUNTPOINT}" -o ro || warn "Failed to mount data filesystem"
+	fi
+}
+
+cache_changed()
+{
+	is_empty_or_mountpoint "${DATA_MOUNTPOINT}" && ! cmp -s "${RECOVERY_CACHE}/${1}.sig" "${1}.sig" || ! verify "${RECOVERY_CACHE}/${1}" 4>/dev/null
+}
+
+remount_cache_rw()
+{
+	is_empty "${DATA_MOUNTPOINT}" || {
+		is_mountpoint "${DATA_MOUNTPOINT}" && info "Remounting '${DATA_MOUNTPOINT}' (rw)" && \
+			mount -o remount,rw "${DATA_MOUNTPOINT}" && is_writable "${DATA_MOUNTPOINT}"
+	}
+}
+
+update_cache()
+{
+	if [ -f "${1}" ] && remount_cache_rw; then
+		create_directory "${RECOVERY_CACHE}"
+		if is_directory "${RECOVERY_CACHE}"; then
+			info "Updating recovery cache (${1})"
+			xcp "${1}" "${RECOVERY_CACHE}/${1}" || true
+		fi
+	fi
+}
+
+update_cache_signed()
+{
+	if cache_changed "${1}" && remount_cache_rw; then
+		create_directory "${RECOVERY_CACHE}"
+		if is_directory "${RECOVERY_CACHE}"; then
+			info "Updating recovery cache (${1})"
+			xcp "${1}" "${RECOVERY_CACHE}/${1}" || true
+			xcp "${1}.sig" "${RECOVERY_CACHE}/${1}.sig" || true
+		fi
+	fi
+}
+
+unmount_cache()
+{
+	unmount "${DATA_MOUNTPOINT}"
+}
+
+run()
+{
+	local cmd="${1}"
+	shift
+
+	info "Running '${cmd}'"
+	is_empty "$@" || info "Options '$@'"
+	chmod 755 "${cmd}" || abort "Failed to set execute permissions"
+	${cmd} $@ || abort "Failed to execute '${cmd}'"
+}
+
+run_postinsts()
+{
+	local virtfs="dev proc run sys tmp"
+	local mountpoint=$1
+	shift
+
+	if [ -d "${mountpoint}/var/lib/dpkg/info" ]; then
+		pkgtype="dpkg"
+	elif [ -d "${mountpoint}/var/lib/opkg/info" ]; then
+		pkgtype="opkg"
+	else
+		warn "Unknown package manager, can't run postinst scripts"
+		return
+	fi
+
+	for fs in ${virtfs}; do
+		safe_mount /${fs} ${mountpoint}/${fs} -o bind || abort "Failed to mount ${mountpoint}/${fs}"
+	done
+	for package in $@; do
+		if [ -x "${mountpoint}/var/lib/${pkgtype}/info/${package}.postinst" ]; then
+			xchroot ${mountpoint} /var/lib/${pkgtype}/info/${package}.postinst || abort "Failed to run ${package}.postinst"
+		fi
+	done
+	for fs in ${virtfs}; do
+		unmount ${mountpoint}/${fs} || warn "Failed to unmount ${mountpoint}/${fs}"
+	done
+}
+
+assert_rescue_mode()
+{
+	is_initrd || is_nfsroot || abort "This script may only run in rescue mode!"
+}
+
+write_blkdev()
+{
+	info "Writing ${1} to ${2}"
+	xdd if=${1} of=${2} bs=64K
+}
+
+write_lba()
+{
+	info "Writing ${1} to ${2} (LBA: ${3})"
+	xdd if="${1}" of="${2}" bs=512 seek="${3}"
+}
+
+select_boot_source()
+{
+	case "${MACHINE}" in
+		dm820|dm7080)
+			info "Enabling boot source ${2}"
+			printf "opt${2}\0" | xdd of=${1} bs=512 seek=64
+			;;
+	esac
+}
+
+usage()
+{
+	echo "Usage: ${0} [-hqtv]"
+	exit ${1}
+}
+
+std_opt()
+{
+	case "${1}" in
+		q)
+			exec 3>/dev/null
+			exec 4>/dev/null
+			exec 5>/dev/null
+			;;
+		t)
+			set -x
+			;;
+		v)
+			exec 3>&1
+			exec 4>&2
+			exec 5>&1
+			;;
+		h|'?')
+			if [ "${1}" = "h" ]; then
+				usage 0
+			else
+				usage 1
+			fi
+			;;
+	esac
+}
+
+xcp()
+{
+	xtrap cp -a $@
+}
+
+xchroot()
+{
+	xtrap chroot $@
+}
+
+xdd()
+{
+	xtrap dd conv=fsync $@
+}
+
+xgetopts()
+{
+	local opt
+
+	while getopts hqtv opt; do
+		std_opt "${opt}"
+	done
+}
+
+xrealpath()
+{
+	local opt
+
+	if realpath -v >/dev/null 2>&1; then
+		opt="-s"
+	else
+		opt="-m"
+	fi
+
+	realpath ${opt} "${1}"
+}
+
+xtar_args()
+{
+	for arg; do
+		if ! tar "$arg" --help 2>&1 | grep -q "^tar: unrecognized option '$arg'$"; then
+			echo "$arg"
+		fi
+	done
+}
+
+xtar()
+{
+	xtrap tar $(xtar_args --numeric-owner --warning=no-timestamp) $@
+}
+
+xtrap()
+{
+	(trap '' HUP INT TERM; exec $@) >&3 2>&4
+}
+
+compatible()
+{
+	for m; do
+		[ "$m" != "${MACHINE}" ] || return 0
+	done
+
+	abort "Unimplemented command."
+}
+
+mark_legacy_version()
+{
+	${LEGACY} || warn "Please consider updating your rescue loader!"
+	LEGACY=:
+}
+
+is_legacy_version()
+{
+	${LEGACY}
+}
+
+librecovery_init

@@ -3,7 +3,7 @@ inherit packagegroup
 
 require conf/license/license-gplv2.inc
 
-DEPENDS = "\
+DEPENDS_remove_dreamone = "\
     enigma2-plugin-drivers-atsc-usb-hauppauge \
     enigma2-plugin-drivers-atsc-950q-usb-hauppauge \
     enigma2-plugin-drivers-atsc-955q-usb-hauppauge \

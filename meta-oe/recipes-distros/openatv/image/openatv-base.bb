@@ -17,7 +17,7 @@ RDEPENDS_${PN} = "\
     flip \
     hddtemp \
     oe-alliance-base \
-    openatv-bootlogo \
+    dreambox-bootlogo \
     openatv-enigma2 \
     openatv-spinner \
     openssh-sftp-server \

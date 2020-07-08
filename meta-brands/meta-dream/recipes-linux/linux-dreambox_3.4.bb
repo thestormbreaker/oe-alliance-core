@@ -13,7 +13,6 @@ SRC_URI = " \
     file://kernel-add-support-for-gcc6.patch \
     file://kernel-add-support-for-gcc7.patch \
     file://kernel-add-support-for-gcc8.patch \
-    file://kernel-add-support-for-gcc9.patch \
     file://genksyms_fix_typeof_handling.patch \
     file://defconfig \
     file://0001-log2-give-up-on-gcc-constant-optimizations.patch \
@@ -37,6 +36,7 @@ do_configure_prepend() {
     rm -rf ${STAGING_KERNEL_DIR}/.config.old
     sed -e "/^SUBLEVEL = /d" -i ${S}/Makefile
 }
+
 
 require linux-dreambox-3.4.inc
 require linux-extra-image.inc

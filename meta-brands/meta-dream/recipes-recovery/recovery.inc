@@ -39,29 +39,54 @@ RDEPENDS_${PN} = " \
     pigz \
     util-linux-mount \
 "
-RDEPENDS_${PN}_append_bcm7435 = " \
+RDEPENDS_${PN}_append_dm820 = " \
     ${EMMCRDEPENDS_recovery} \
 "
-RDEPENDS_${PN}_append_bcm7252s = " \
+RDEPENDS_${PN}_append_dm7080 = " \
     ${EMMCRDEPENDS_recovery} \
 "
-RDEPENDS_${PN}_append_bcm73625 = " \
+RDEPENDS_${PN}_append_dm900 = " \
+    ${EMMCRDEPENDS_recovery} \
+"
+RDEPENDS_${PN}_append_dm920 = " \
+    ${EMMCRDEPENDS_recovery} \
+"
+RDEPENDS_${PN}_append_dm520 = " \
     ${NANDRDEPENDS_recovery} \
+"
+RDEPENDS_${PN}_append_meson64 = " \
+    ${EMMCRDEPENDS_recovery} \
+    ${PN}-fbscaled \
 "
 
 RDEPENDS_flash-scripts = " \
     coreutils-realpath \
-    tpm-ca \
 "
-RDEPENDS_flash-scripts_append_bcm7435 = " \
+RDEPENDS_flash-scripts_append_dm820 = " \
+    ${EMMCRDEPENDS_flash-scripts} \
+    mkbootblob \
+"
+RDEPENDS_flash-scripts_append_dm7080 = " \
     ${EMMCRDEPENDS_flash-scripts} \
     ${FASTBOOTRDEPENDS_flash-scripts} \
 "
-RDEPENDS_flash-scripts_append_bcm7252s = " \
+RDEPENDS_flash-scripts_append_dm900 = " \
     ${EMMCRDEPENDS_flash-scripts} \
 "
-RDEPENDS_flash-scripts_append_bcm73625 = " \
+RDEPENDS_flash-scripts_append_dm920 = " \
+    ${EMMCRDEPENDS_flash-scripts} \
+"
+RDEPENDS_flash-scripts_append_dm520 = " \
     ${NANDRDEPENDS_flash-scripts} \
+"
+
+RDEPENDS_flash-scripts_append_meson64 = " \
+    ${EMMCRDEPENDS_flash-scripts} \
+    mkbootimg \
+    u-boot-mkimage \
+"
+RRECOMMENDS_flash-scripts = " \
+    dreambox-dvb-modules-stb-core \
 "
 
 FILES_flash-scripts = " \

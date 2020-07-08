@@ -22,7 +22,6 @@ RRECOMMENDS_${PN} = "\
     enigma2-plugin-extensions-epgimport \
     enigma2-plugin-systemplugins-crossepg \
     curlftpfs \
-    cdfs \
     openssl-old \
     enigma2-plugin-extensions-sdgradio \
     enigma2-plugin-extensions-enhancedmoviecenter \

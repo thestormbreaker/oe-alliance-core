@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# Copyright (C) 2016 Dream Property GmbH
+#
+
+source librecovery
+
+URI="http://dreamboxupdate.com/download/recovery/${MACHINE}/release/rescue-image-${MACHINE}.bin"
+
+usage()
+{
+	echo "Usage: ${0} [-fhqtv] [<URI>]"
+	exit "${1}"
+}
+
+FORCE="false"
+while getopts fhqtv opt; do
+	case "${opt}" in
+		f)
+			FORCE=":"
+			;;
+	esac
+	std_opt "${opt}"
+done
+
+shift $((${OPTIND} - 1))
+[ "$#" -le 1 ] || usage 1
+URI="${1:-${URI}}"
+
+${FORCE} || ! is_initrd || abort "Do not run this command from rescue mode!"
+
+create_workspace
+create_keyring_for_uri "${URI}"
+
+BASE_URI="$(dirname ${URI})"
+FILENAME="$(basename ${URI})"
+
+fetch_signed "${BASE_URI}" "${FILENAME}"
+info "Writing rescue image to flash"
+xtrap flash-rescue "${FILENAME}"
+info "Done."

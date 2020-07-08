@@ -3,7 +3,7 @@ inherit packagegroup
 
 require conf/license/license-gplv2.inc
 
-DEPENDS = "\
+DEPENDS_remove = "\
     ${@bb.utils.contains("MACHINE_FEATURES", "wifiusblegacy", "", " \
     enigma2-plugin-drivers-network-usb-ath9k-htc \
     enigma2-plugin-drivers-network-usb-carl9170 \
@@ -12,7 +12,6 @@ DEPENDS = "\
     enigma2-plugin-drivers-network-usb-rtl8187 \
     enigma2-plugin-drivers-network-usb-smsc75xx \
     enigma2-plugin-drivers-network-usb-zd1211rw \
-    enigma2-plugin-drivers-network-usb-rtl8812au \
     enigma2-plugin-drivers-network-usb-r8723a \
     enigma2-plugin-drivers-network-usb-rt8723bs \
     enigma2-plugin-drivers-network-usb-mt7601u \
