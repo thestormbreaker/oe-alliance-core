@@ -19,6 +19,7 @@ IMAGE_INSTALL = "openatv-base \
     packagegroup-base-smbfs-client \
     packagegroup-base-smbfs-server \
     packagegroup-base-nfs \
+    packagegroup-base-bluetooth \
     ", d)} \
     "
 # Some additional comfort on the shell: Pre-install nano on boxes with 128 MB or more:
